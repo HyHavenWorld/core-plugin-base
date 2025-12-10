@@ -15,7 +15,7 @@ public class RoleServiceImpl implements RoleService {
 
     public RoleServiceImpl( CoreConfig coreConfig ) {
         this.roleRepository = switch(coreConfig.getStorageType()) {
-            case DATABASE ->  new RoleRepositoryImplJDBC(coreConfig.getDatabaseConfig());
+            case DATABASE ->  new RoleRepositoryImplJDBC();
             case FILE -> new RoleRepositoryImplFile(coreConfig.getFilePath());
             default -> new RoleRepositoryImplFile(coreConfig.getFilePath());
         };

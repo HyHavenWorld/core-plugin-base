@@ -1,6 +1,7 @@
 package com.hyhavenworld.core.service;
 
 import com.hyhavenworld.core.api.PermissionService;
+import com.hyhavenworld.core.config.CoreConfig;
 import com.hyhavenworld.core.repository.permission.PermissionRepository;
 import com.hyhavenworld.core.repository.user.UserRepository;
 
@@ -11,8 +12,8 @@ public class PermissionServiceImpl implements PermissionService {
     private UserRepository userRepository;
     private PermissionRepository permissionRepository;
 
-    public PermissionServiceImpl() {}
-    
+    public PermissionServiceImpl( CoreConfig coreConfig ) {}
+
     @Override
     public boolean hasPermission(UUID playerId, String permissionKey) {
         // Permission Hierarchy

@@ -11,10 +11,4 @@ public interface RoleRepository {
     Optional<Role> getRole(int id);
     void addInheritance(String parent, String child);
 
-
-    void update(Role role);
-    void delete(Long id);
-    Set<Role> findAll();
-    void assignPermission(Long role, Long permission);
-    void unassignPermission(Long role, Long permission);
 }

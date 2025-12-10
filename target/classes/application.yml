@@ -1,0 +1,10 @@
+storageType: database
+database:
+  enabled: true
+  host: localhost
+  port: 3306
+  name: hytale_core
+  user: root
+  pass: secret
+file:
+  path: permission-data.yml

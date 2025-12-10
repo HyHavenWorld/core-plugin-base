@@ -18,7 +18,7 @@ public class UserServiceImpl implements UserService {
 
     public UserServiceImpl( CoreConfig coreConfig ) {
         this.userRepository = switch(coreConfig.getStorageType()) {
-            case DATABASE ->  new UserRepositoryImplJDBC( coreConfig.getDatabaseConfig() );
+            case DATABASE ->  new UserRepositoryImplJDBC();
             case FILE -> new UserRepositoryImplFile(coreConfig.getFilePath());
             default -> new UserRepositoryImplFile(coreConfig.getFilePath());
         };
