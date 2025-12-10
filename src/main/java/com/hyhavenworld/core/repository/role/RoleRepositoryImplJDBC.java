@@ -13,13 +13,13 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class RoleRepositoryimplJDBC implements RoleRepository{
+public class RoleRepositoryImplJDBC implements RoleRepository{
 
-    private static Logger logger = LoggerFactory.getLogger(RoleRepositoryimplJDBC.class);
+    private static Logger logger = LoggerFactory.getLogger(RoleRepositoryImplJDBC.class);
 
     private final DatabaseManager db;
 
-    public RoleRepositoryimplJDBC(DatabaseManager db) {
+    public RoleRepositoryImplJDBC(DatabaseManager db) {
         this.db = db;
     }
 
