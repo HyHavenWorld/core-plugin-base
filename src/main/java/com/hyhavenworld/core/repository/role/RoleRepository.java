@@ -7,8 +7,11 @@ import java.util.Set;
 
 public interface RoleRepository {
 
-    Role create(Role role);
-    Optional<Role> findById(Long id);
+    Role createRole(Role role);
+    Optional<Role> getRole(int id);
+    void addInheritance(String parent, String child);
+
+
     void update(Role role);
     void delete(Long id);
     Set<Role> findAll();

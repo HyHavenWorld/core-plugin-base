@@ -24,7 +24,7 @@ public class RoleRepositoryimplJDBC implements RoleRepository{
     }
 
     @Override
-    public Role create(Role role) {
+    public Role createRole(Role role) {
         String sql = """
             INSERT INTO role (name, createdAt)
             VALUES (?, ?)

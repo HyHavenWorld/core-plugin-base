@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Set<Role> getRoles(UUID playerId) {
-        return Set.of();
+        return this.userRepository.getRoles(playerId);
     }
 }
 
