@@ -1,44 +1,27 @@
 package com.hyhavenworld.core.config;
 
+import com.hyhavenworld.core.util.YamlUtil;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
 public class CoreConfig {
+    private final StorageType storageType;
+    private final String filePath;
+    private final DatabaseConfig databaseConfig;
 
-    private String host;
-    private int port;
-    private String database;
-    private String username;
-    private String password;
-    private int poolMaxSize;
-
-    public CoreConfig(String host, int port, String database, String username, String password, int poolMaxSize) {
-        this.host = host;
-        this.port = port;
-        this.database = database;
-        this.username = username;
-        this.password = password;
-        this.poolMaxSize = poolMaxSize;
+    public CoreConfig(File configFile) throws IOException {
+        YamlUtil yamlUtil = new YamlUtil(configFile);
+        this.storageType = StorageType.valueOf(yamlUtil.getString("storageType").toUpperCase());
+        Map<String, Object> fileConfig = (Map<String, Object>) yamlData.get("file");
+        this.filePath = fileConfig.get("path").toString();
+        this.databaseConfig = new DatabaseConfig(yaml.getConfigurationSection("database"));
     }
 
-    public String getHost() {
-        return host;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public String getDatabase() {
-        return database;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public int getPoolMaxSize() {
-        return poolMaxSize;
-    }
+    public StorageType getStorageType() { return storageType; }
+    public boolean isDatabaseEnabled() { return databaseEnabled; }
+    public String getFilePath() { return filePath; }
+    public DatabaseConfig getDatabaseConfig() { return databaseConfig; }
 }
