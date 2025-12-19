@@ -340,7 +340,3 @@ This is a private library for HyHaven World plugins. For issues or feature reque
 Proprietary - HyHaven World Project
 
 ---
-
-**Need Help?**
-
-See `ExamplePlugin.java` in the `src/main/java/com/hyhavenworld/core/example/` directory for a complete working example.
