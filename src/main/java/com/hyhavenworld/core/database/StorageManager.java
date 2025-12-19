@@ -26,4 +26,19 @@ public class StorageManager {
     public DatabaseManager getDatabase() {
         return db;
     }
+
+    /**
+     * FOR TESTING ONLY - Sets a custom instance for testing purposes
+     * This allows tests to inject a mock DatabaseManager
+     */
+    public static void setInstanceForTesting(DatabaseManager testDatabaseManager) {
+        instance = new StorageManager(testDatabaseManager);
+    }
+
+    /**
+     * FOR TESTING ONLY - Resets the singleton instance
+     */
+    public static void resetForTesting() {
+        instance = null;
+    }
 }

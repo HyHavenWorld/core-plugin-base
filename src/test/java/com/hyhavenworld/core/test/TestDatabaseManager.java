@@ -34,7 +34,7 @@ public class TestDatabaseManager {
         config.setUsername("sa");
         config.setPassword("");
         config.setMaximumPoolSize(5);
-        config.setAutoCommit(false);
+        config.setAutoCommit(true);
 
         dataSource = new HikariDataSource(config);
 
@@ -42,6 +42,7 @@ public class TestDatabaseManager {
         Flyway flyway = Flyway.configure()
             .dataSource(dataSource)
             .locations("classpath:db/migration")
+            .cleanDisabled(false)
             .load();
 
         flyway.migrate();
@@ -55,6 +56,7 @@ public class TestDatabaseManager {
         Flyway flyway = Flyway.configure()
             .dataSource(dataSource)
             .locations("classpath:db/migration")
+            .cleanDisabled(false)
             .load();
 
         flyway.clean();

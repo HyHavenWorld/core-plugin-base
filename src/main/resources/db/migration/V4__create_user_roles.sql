@@ -1,5 +1,3 @@
--- User-Role association table
--- Many-to-many relationship: a user can have multiple roles
 CREATE TABLE IF NOT EXISTS user_roles (
     user_uuid VARCHAR(36) NOT NULL,
     role_id INT NOT NULL,

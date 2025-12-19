@@ -206,19 +206,38 @@ public class UserRepositoryImplJDBC implements UserRepository {
 
     @Override
     public void addRole(UUID uuid, String roleName) throws CorePersistenceException {
-        String sql = """
-        INSERT INTO user_roles (user_uuid, role_id)
-        SELECT ?, id FROM roles WHERE name = ?
-        ON CONFLICT DO NOTHING
-        """;
+        try (Connection conn = StorageManager.get().getDatabase().getConnection()) {
 
-        try (Connection conn = StorageManager.get().getDatabase().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            // Check if already exists
+            String checkSql = """
+            SELECT COUNT(*)
+            FROM user_roles ur
+            INNER JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_uuid = ? AND r.name = ?
+            """;
 
-            stmt.setString(1, uuid.toString());
-            stmt.setString(2, roleName);
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setString(1, uuid.toString());
+                checkStmt.setString(2, roleName);
 
-            stmt.executeUpdate();
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        return; // Already exists, nothing to do
+                    }
+                }
+            }
+
+            // Insert if doesn't exist
+            String insertSql = """
+            INSERT INTO user_roles (user_uuid, role_id)
+            SELECT ?, id FROM roles WHERE name = ?
+            """;
+
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                insertStmt.setString(1, uuid.toString());
+                insertStmt.setString(2, roleName);
+                insertStmt.executeUpdate();
+            }
 
         } catch (SQLException e) {
             throw new CorePersistenceException("Error adding role to user", e);
@@ -284,22 +303,37 @@ public class UserRepositoryImplJDBC implements UserRepository {
 
     @Override
     public void addPermission(UUID uuid, String permissionNode, boolean value) throws CorePersistenceException {
-        String sql = """
-        INSERT INTO user_permissions (user_uuid, permission_node, value)
-        VALUES (?, ?, ?)
-        ON CONFLICT (user_uuid, permission_node)
-        DO UPDATE SET value = EXCLUDED.value
-        """;
+        try (Connection conn = StorageManager.get().getDatabase().getConnection()) {
 
-        try (Connection conn = StorageManager.get().getDatabase().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            // Try UPDATE first
+            String updateSql = """
+            UPDATE user_permissions
+            SET perm_value = ?
+            WHERE user_uuid = ? AND permission_node = ?
+            """;
 
-            stmt.setString(1, uuid.toString());
-            stmt.setString(2, permissionNode);
-            stmt.setBoolean(3, value);
+            try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                stmt.setBoolean(1, value);
+                stmt.setString(2, uuid.toString());
+                stmt.setString(3, permissionNode);
 
-            stmt.executeUpdate();
+                int affected = stmt.executeUpdate();
 
+                if (affected == 0) {
+                    // If UPDATE didn't affect any rows, do INSERT
+                    String insertSql = """
+                    INSERT INTO user_permissions (user_uuid, permission_node, perm_value)
+                    VALUES (?, ?, ?)
+                    """;
+
+                    try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                        insertStmt.setString(1, uuid.toString());
+                        insertStmt.setString(2, permissionNode);
+                        insertStmt.setBoolean(3, value);
+                        insertStmt.executeUpdate();
+                    }
+                }
+            }
         } catch (SQLException e) {
             throw new CorePersistenceException("Error adding permission to user", e);
         }
@@ -325,7 +359,7 @@ public class UserRepositoryImplJDBC implements UserRepository {
     @Override
     public Set<Permission> getPermissions(UUID uuid) throws CorePersistenceException {
         String sql = """
-        SELECT permission_node, value
+        SELECT permission_node, perm_value
         FROM user_permissions
         WHERE user_uuid = ?
         """;
@@ -341,7 +375,7 @@ public class UserRepositoryImplJDBC implements UserRepository {
                 while (rs.next()) {
                     Permission permission = new Permission(
                         rs.getString("permission_node"),
-                        rs.getBoolean("value")
+                        rs.getBoolean("perm_value")
                     );
                     permissions.add(permission);
                 }

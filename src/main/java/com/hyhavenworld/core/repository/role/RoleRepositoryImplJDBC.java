@@ -16,26 +16,28 @@ public class RoleRepositoryImplJDBC implements RoleRepository {
 
     @Override
     public Role create(Role role) throws CorePersistenceException {
-        String sql = """
-            INSERT INTO roles (name, created_at)
-            VALUES (?, ?)
-            RETURNING id, created_at
-           """;
+        String sql = "INSERT INTO roles (name, created_at) VALUES (?, ?)";
 
         try (Connection conn = StorageManager.get().getDatabase().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             Timestamp ts = new Timestamp(System.currentTimeMillis());
             stmt.setString(1, role.getName());
             stmt.setTimestamp(2, ts);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+            int affected = stmt.executeUpdate();
+
+            if (affected == 0) {
+                throw new CorePersistenceException("Insert returned 0 affected rows");
+            }
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
-                    Long id = rs.getLong("id");
+                    Long id = rs.getLong(1);
                     return new Role(
                         id,
                         role.getName(),
-                        rs.getTimestamp("created_at").toLocalDateTime(),
+                        ts.toLocalDateTime(),
                         Set.of()
                     );
                 }
@@ -191,22 +193,38 @@ public class RoleRepositoryImplJDBC implements RoleRepository {
 
     @Override
     public void addPermission(String roleName, String permissionNode, boolean value) throws CorePersistenceException {
-        String sql = """
-        INSERT INTO role_permissions (role_id, permission_node, value)
-        SELECT id, ?, ? FROM roles WHERE name = ?
-        ON CONFLICT (role_id, permission_node)
-        DO UPDATE SET value = EXCLUDED.value
-        """;
+        try (Connection conn = StorageManager.get().getDatabase().getConnection()) {
 
-        try (Connection conn = StorageManager.get().getDatabase().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            // Try UPDATE first
+            String updateSql = """
+            UPDATE role_permissions
+            SET perm_value = ?
+            WHERE role_id = (SELECT id FROM roles WHERE name = ?)
+              AND permission_node = ?
+            """;
 
-            stmt.setString(1, permissionNode);
-            stmt.setBoolean(2, value);
-            stmt.setString(3, roleName);
+            try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                stmt.setBoolean(1, value);
+                stmt.setString(2, roleName);
+                stmt.setString(3, permissionNode);
 
-            stmt.executeUpdate();
+                int affected = stmt.executeUpdate();
 
+                if (affected == 0) {
+                    // If UPDATE didn't affect any rows, do INSERT
+                    String insertSql = """
+                    INSERT INTO role_permissions (role_id, permission_node, perm_value)
+                    SELECT id, ?, ? FROM roles WHERE name = ?
+                    """;
+
+                    try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                        insertStmt.setString(1, permissionNode);
+                        insertStmt.setBoolean(2, value);
+                        insertStmt.setString(3, roleName);
+                        insertStmt.executeUpdate();
+                    }
+                }
+            }
         } catch (SQLException e) {
             throw new CorePersistenceException("Error adding permission to role", e);
         }
@@ -235,7 +253,7 @@ public class RoleRepositoryImplJDBC implements RoleRepository {
     @Override
     public Set<Permission> getPermissions(String roleName) throws CorePersistenceException {
         String sql = """
-        SELECT rp.permission_node, rp.value
+        SELECT rp.permission_node, rp.perm_value
         FROM role_permissions rp
         INNER JOIN roles r ON rp.role_id = r.id
         WHERE r.name = ?
@@ -252,7 +270,7 @@ public class RoleRepositoryImplJDBC implements RoleRepository {
                 while (rs.next()) {
                     Permission permission = new Permission(
                         rs.getString("permission_node"),
-                        rs.getBoolean("value")
+                        rs.getBoolean("perm_value")
                     );
                     permissions.add(permission);
                 }
@@ -269,21 +287,41 @@ public class RoleRepositoryImplJDBC implements RoleRepository {
 
     @Override
     public void addInheritance(String parentRoleName, String childRoleName) throws CorePersistenceException {
-        String sql = """
-        INSERT INTO role_inheritance (parent_role_id, child_role_id)
-        SELECT p.id, c.id
-        FROM roles p, roles c
-        WHERE p.name = ? AND c.name = ?
-        ON CONFLICT DO NOTHING
-        """;
+        try (Connection conn = StorageManager.get().getDatabase().getConnection()) {
 
-        try (Connection conn = StorageManager.get().getDatabase().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            // Check if already exists
+            String checkSql = """
+            SELECT COUNT(*)
+            FROM role_inheritance ri
+            INNER JOIN roles p ON ri.parent_role_id = p.id
+            INNER JOIN roles c ON ri.child_role_id = c.id
+            WHERE p.name = ? AND c.name = ?
+            """;
 
-            stmt.setString(1, parentRoleName);
-            stmt.setString(2, childRoleName);
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setString(1, parentRoleName);
+                checkStmt.setString(2, childRoleName);
 
-            stmt.executeUpdate();
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        return; // Already exists, nothing to do
+                    }
+                }
+            }
+
+            // Insert if doesn't exist
+            String insertSql = """
+            INSERT INTO role_inheritance (parent_role_id, child_role_id)
+            SELECT p.id, c.id
+            FROM roles p, roles c
+            WHERE p.name = ? AND c.name = ?
+            """;
+
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                insertStmt.setString(1, parentRoleName);
+                insertStmt.setString(2, childRoleName);
+                insertStmt.executeUpdate();
+            }
 
         } catch (SQLException e) {
             throw new CorePersistenceException("Error adding role inheritance", e);

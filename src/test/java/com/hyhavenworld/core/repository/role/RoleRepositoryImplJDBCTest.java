@@ -25,27 +25,16 @@ class RoleRepositoryImplJDBCTest {
     static void setupDatabase() {
         testDb = TestDatabaseManager.getInstance();
 
-        // Mock StorageManager to use test database
-        try {
-            var field = StorageManager.class.getDeclaredField("instance");
-            field.setAccessible(true);
+        // Create a mock DatabaseManager that uses the test database
+        com.hyhavenworld.core.database.DatabaseManager mockDb = new com.hyhavenworld.core.database.DatabaseManager() {
+            @Override
+            public java.sql.Connection getConnection() throws java.sql.SQLException {
+                return testDb.getConnection();
+            }
+        };
 
-            var mockStorage = new StorageManager() {
-                @Override
-                public com.hyhavenworld.core.database.DatabaseManager getDatabase() {
-                    return new com.hyhavenworld.core.database.DatabaseManager() {
-                        @Override
-                        public java.sql.Connection getConnection() throws java.sql.SQLException {
-                            return testDb.getConnection();
-                        }
-                    };
-                }
-            };
-
-            field.set(null, mockStorage);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to mock StorageManager", e);
-        }
+        // Inject the mock DatabaseManager into StorageManager
+        StorageManager.setInstanceForTesting(mockDb);
     }
 
     @BeforeEach
@@ -56,6 +45,7 @@ class RoleRepositoryImplJDBCTest {
 
     @AfterAll
     static void tearDown() {
+        StorageManager.resetForTesting();
         TestDatabaseManager.reset();
     }
 
