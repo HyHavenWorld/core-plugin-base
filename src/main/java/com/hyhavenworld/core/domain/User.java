@@ -10,17 +10,19 @@ public class User{
     private LocalDateTime lastSeen;
     private Long hoursPlayed;
     private Set<Role> roles;
+    private Set<Permission> permissions;
 
     public User() {
     }
 
-    public User(String uuid, String username, LocalDateTime createdAt, LocalDateTime lastSeen, Long hoursPlayed, Set<Role> roles) {
+    public User(String uuid, String username, LocalDateTime createdAt, LocalDateTime lastSeen, Long hoursPlayed, Set<Role> roles, Set<Permission> permissions) {
         this.uuid = uuid;
         this.username = username;
         this.createdAt = createdAt;
         this.lastSeen = lastSeen;
         this.hoursPlayed = hoursPlayed;
         this.roles = roles;
+        this.permissions = permissions;
     }
 
     public String getUuid() {
@@ -69,5 +71,13 @@ public class User{
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public Set<Permission> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(Set<Permission> permissions) {
+        this.permissions = permissions;
     }
 }

@@ -1,7 +1,11 @@
+-- User-Role association table
+-- Many-to-many relationship: a user can have multiple roles
 CREATE TABLE IF NOT EXISTS user_roles (
-    user_id INT NOT NULL,
+    user_uuid VARCHAR(36) NOT NULL,
     role_id INT NOT NULL,
-    PRIMARY KEY(user_id, role_id),
-    FOREIGN KEY(user_id) REFERENCES users(id),
-    FOREIGN KEY(role_id) REFERENCES roles(id)
+    PRIMARY KEY(user_uuid, role_id),
+    FOREIGN KEY(user_uuid) REFERENCES users(uuid) ON DELETE CASCADE,
+    FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_user_roles_role ON user_roles(role_id);
