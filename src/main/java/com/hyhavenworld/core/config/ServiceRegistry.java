@@ -7,37 +7,49 @@ import com.hyhavenworld.core.service.PermissionServiceImpl;
 import com.hyhavenworld.core.service.RoleServiceImpl;
 import com.hyhavenworld.core.service.UserServiceImpl;
 
+/**
+ * Registry for core services (User, Role, Permission).
+ * Manages service instances and their lifecycle.
+ *
+ * Note: This class is typically not used directly by plugins.
+ * Use CorePluginManager instead for a simpler API.
+ */
 public class ServiceRegistry {
-
-    private static ServiceRegistry instance;
 
     private final UserService userService;
     private final RoleService roleService;
     private final PermissionService permissionService;
 
-    private ServiceRegistry() {
-        CoreConfig coreConfig = new CoreConfig();
-        this.userService = new UserServiceImpl(coreConfig);
-        this.roleService = new RoleServiceImpl(coreConfig);
-        this.permissionService = new PermissionServiceImpl(coreConfig);
+    /**
+     * Public constructor. Services are created based on the provided configuration.
+     * This class is typically instantiated by CorePluginManager.
+     *
+     * @param config CoreConfig with storage type and settings
+     */
+    public ServiceRegistry(CoreConfig config) {
+        this.userService = new UserServiceImpl(config);
+        this.roleService = new RoleServiceImpl(config);
+        this.permissionService = new PermissionServiceImpl(config);
     }
 
-    public static void init() {
-        if (instance != null) {
-            throw new RegistryException("ServiceRegistry already initialized");
-        }
-
-        instance = new ServiceRegistry();
+    public UserService users() {
+        return userService;
     }
 
-    public static ServiceRegistry get() {
-        if (instance == null) {
-            throw new RegistryException("ServiceRegistry must be initialized first");
-        }
-        return instance;
+    public RoleService roles() {
+        return roleService;
     }
 
-    public UserService users() { return userService; }
-    public RoleService roles() { return roleService; }
-    public PermissionService permissions() { return permissionService; }
+    public PermissionService permissions() {
+        return permissionService;
+    }
+
+    /**
+     * Reset the registry. Called during shutdown to clean up resources.
+     * Public static method called by CorePluginManager.
+     */
+    public static void reset() {
+        // Services don't hold resources, but this method exists for future extensibility
+        // and to maintain symmetry with initialization
+    }
 }

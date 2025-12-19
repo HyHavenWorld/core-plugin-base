@@ -1,6 +1,5 @@
 package com.hyhavenworld.core.config;
 
-import com.hyhavenworld.core.database.DatabaseManager;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 

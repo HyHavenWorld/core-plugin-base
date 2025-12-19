@@ -2,7 +2,12 @@ package com.hyhavenworld.core.database;
 
 import com.hyhavenworld.core.config.CoreConfig;
 
-public class StorageManager {
+/**
+ * Manages database storage and connection pooling.
+ * This class is typically not used directly by plugins.
+ * Use CorePluginManager instead for a simpler API.
+ */
+public class StorageManager implements AutoCloseable {
     private static StorageManager instance;
 
     private final DatabaseManager db;
@@ -11,8 +16,17 @@ public class StorageManager {
         this.db = db;
     }
 
+    /**
+     * Initialize the StorageManager with the given configuration.
+     * Called by CorePluginManager during initialization.
+     *
+     * @param config CoreConfig with database settings
+     * @throws CorePersistenceException if already initialized
+     */
     public static void init(CoreConfig config) {
-        if (instance != null) throw new CorePersistenceException("StorageManager already initialized");
+        if (instance != null) {
+            throw new CorePersistenceException("StorageManager already initialized");
+        }
         DatabaseManager db = new DatabaseManager();
         db.init(config);
 
@@ -20,11 +34,26 @@ public class StorageManager {
     }
 
     public static StorageManager get() {
+        if (instance == null) {
+            throw new CorePersistenceException("StorageManager not initialized");
+        }
         return instance;
     }
 
     public DatabaseManager getDatabase() {
         return db;
+    }
+
+    /**
+     * Close database connections and release resources.
+     * Called automatically by CorePluginManager.shutdown().
+     */
+    @Override
+    public void close() {
+        if (db != null) {
+            db.close();
+        }
+        instance = null;
     }
 
     /**
