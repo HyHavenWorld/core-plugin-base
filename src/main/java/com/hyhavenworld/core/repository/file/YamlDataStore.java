@@ -77,7 +77,11 @@ public class YamlDataStore {
     private void saveToFile() {
         try {
             Path path = Paths.get(filePath);
-            Files.createDirectories(path.getParent());
+
+            // Create parent directories if they exist (path may be just a filename)
+            if (path.getParent() != null) {
+                Files.createDirectories(path.getParent());
+            }
 
             try (Writer writer = new FileWriter(filePath)) {
                 yaml.dump(data, writer);
@@ -164,7 +168,7 @@ public class YamlDataStore {
         write(data -> {
             Map<String, Object> metadata = (Map<String, Object>) data.get("metadata");
             Object nextId = metadata.get("next_role_id");
-            Long currentId;
+            final Long currentId;
             if (nextId instanceof Integer) {
                 currentId = ((Integer) nextId).longValue();
             } else if (nextId instanceof Long) {
