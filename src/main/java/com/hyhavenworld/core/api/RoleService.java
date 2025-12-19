@@ -13,7 +13,7 @@ public interface RoleService {
      * @param id the role id
      * @return Optional with the role if found
      */
-    Optional<Role> getRole(int id);
+    Optional<Role> getRole(Long id);
 
     /**
      * Method that creates a role

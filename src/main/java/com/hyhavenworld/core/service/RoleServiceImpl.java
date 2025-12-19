@@ -22,13 +22,13 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public Optional<Role> getRole(int id) {
-        return this.roleRepository.getRole(id);
+    public Optional<Role> getRole(Long id) {
+        return this.roleRepository.getById(id);
     }
 
     @Override
     public void createRole(Role role) {
-        this.roleRepository.createRole(role);
+        this.roleRepository.create(role);
     }
 
     @Override

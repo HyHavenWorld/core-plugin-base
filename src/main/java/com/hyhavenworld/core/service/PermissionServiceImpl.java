@@ -24,11 +24,11 @@ public class PermissionServiceImpl implements PermissionService {
     public PermissionServiceImpl(CoreConfig coreConfig) {
         this.userRepository = switch (coreConfig.getStorageType()) {
             case DATABASE -> new UserRepositoryImplJDBC();
-            case FILE -> new UserRepositoryImplFile(coreConfig.getFile().getPath());
+            case FILE -> new UserRepositoryImplFile(coreConfig.getFilePath());
         };
         this.roleRepository = switch (coreConfig.getStorageType()) {
             case DATABASE -> new RoleRepositoryImplJDBC();
-            case FILE -> new RoleRepositoryImplFile(coreConfig.getFile().getPath());
+            case FILE -> new RoleRepositoryImplFile(coreConfig.getFilePath());
         };
     }
 
