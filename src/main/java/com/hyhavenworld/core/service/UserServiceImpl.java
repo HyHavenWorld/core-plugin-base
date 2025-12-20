@@ -45,6 +45,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User createUser(UUID playerId, String username) {
+        // Create User object with UUID and username
+        // Timestamps and hoursPlayed will be set by repository
+        User user = new User(
+            playerId.toString(),  // Convert UUID to String
+            username,
+            null,                 // createdAt set by repository
+            null,                 // lastSeen set by repository
+            0L,                   // hoursPlayed set by repository
+            Set.of(),            // empty roles initially
+            Set.of()             // empty permissions initially
+        );
+
+        // Delegate to repository
+        User created = userRepository.create(user);
+
+        // Cache the newly created user for immediate access
+        cacheManager.cacheUser(playerId, created);
+
+        return created;
+    }
+
+    @Override
     public void addRole(UUID playerId, String roleKey) {
         userRepository.addRole(playerId, roleKey);
         // Invalidate user cache since roles changed
@@ -63,6 +86,27 @@ public class UserServiceImpl implements UserService {
         // Note: We don't cache this separately as it's part of the User object
         // If we cached the user, roles are already included
         return userRepository.getRoles(playerId);
+    }
+
+    @Override
+    public Set<com.hyhavenworld.core.domain.Permission> getPermissions(UUID playerId) {
+        // Note: We don't cache this separately as it's part of the User object
+        // If we cached the user, permissions are already included
+        return userRepository.getPermissions(playerId);
+    }
+
+    @Override
+    public void addPermission(UUID playerId, String permissionNode, boolean value) {
+        userRepository.addPermission(playerId, permissionNode, value);
+        // Invalidate user cache since permissions changed
+        cacheManager.invalidateUser(playerId);
+    }
+
+    @Override
+    public void removePermission(UUID playerId, String permissionNode) {
+        userRepository.removePermission(playerId, permissionNode);
+        // Invalidate user cache since permissions changed
+        cacheManager.invalidateUser(playerId);
     }
 
     /**
