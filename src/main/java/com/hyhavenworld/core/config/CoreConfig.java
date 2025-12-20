@@ -12,9 +12,14 @@ public class CoreConfig {
     private final CacheConfig cacheConfig;
 
     public CoreConfig(){
-        Config config = ConfigFactory.parseFile(new File("application.yml")).resolve();
+        Config config = ConfigFactory.parseFile(new File("application.conf")).resolve();
         this.storageType = StorageType.valueOf(config.getString("storageType").toUpperCase());
-        this.filePath = config.getString("file.path");
+
+        // Only read file.path if storage type is FILE
+        this.filePath = (this.storageType == StorageType.FILE && config.hasPath("file.path"))
+            ? config.getString("file.path")
+            : null;
+
         this.databaseConfig = new DatabaseConfig(config);
         this.cacheConfig = new CacheConfig(config);
     }

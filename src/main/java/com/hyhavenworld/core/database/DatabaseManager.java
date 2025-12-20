@@ -26,6 +26,10 @@ public class DatabaseManager implements AutoCloseable {
     void init(CoreConfig config) {
         HikariConfig hikari = new HikariConfig();
         DatabaseConfig databaseConfig = config.getDatabaseConfig();
+
+        // Explicitly set driver class name (works even with shaded/relocated dependencies)
+        hikari.setDriverClassName(databaseConfig.getDriverClassName());
+
         hikari.setJdbcUrl(databaseConfig.getJdbcUrl());
         hikari.setUsername(databaseConfig.getUser());
         hikari.setPassword(databaseConfig.getPassword());
@@ -38,13 +42,19 @@ public class DatabaseManager implements AutoCloseable {
 
         datasource = new HikariDataSource(hikari);
 
-        // Run database migrations
-        runMigrations(databaseConfig);
+        // Run database migrations using the same datasource
+        runMigrations();
     }
 
-    private void runMigrations(DatabaseConfig config) {
-        Flyway flyway = Flyway.configure()
-            .dataSource(config.getJdbcUrl(), config.getUser(), config.getPassword())
+    private void runMigrations() {
+        // Use the HikariCP datasource instead of creating a new one
+        // This ensures the driver is loaded in the correct classloader context
+
+        // Set the correct classloader for finding migration files in plugin environments
+        ClassLoader classLoader = this.getClass().getClassLoader();
+
+        Flyway flyway = Flyway.configure(classLoader)
+            .dataSource(datasource)
             .locations("classpath:db/migration")
             .load();
 

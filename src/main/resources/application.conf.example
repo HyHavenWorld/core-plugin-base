@@ -1,0 +1,82 @@
+# Core Plugin Base - Configuration Example
+# Copy this file to application.conf and adjust as needed
+# This file uses HOCON (Human-Optimized Config Object Notation) format
+
+# ==============================================================================
+# IMPORTANT: Choose ONE storage type and configure only that section
+# ==============================================================================
+
+# Storage type: DATABASE or FILE
+storageType = DATABASE
+
+# ------------------------------------------------------------------------------
+# DATABASE STORAGE CONFIGURATION (only needed if storageType = DATABASE)
+# ------------------------------------------------------------------------------
+database {
+  host = localhost
+  port = 5432
+  name = hyhavenworld
+  user = postgres
+  pass = your_password
+  maximumPoolSize = 10
+}
+
+# ------------------------------------------------------------------------------
+# FILE STORAGE CONFIGURATION (only needed if storageType = FILE)
+# ------------------------------------------------------------------------------
+# Uncomment this section if using FILE storage:
+# file {
+#   path = "data/permissions.yml"
+# }
+
+# ------------------------------------------------------------------------------
+# CACHE CONFIGURATION (optional, works with both storage types)
+# ------------------------------------------------------------------------------
+caching {
+  enabled = false          # Enable/disable caching (default: false)
+  ttl = 300                # Time to live in seconds (default: 300 = 5 minutes)
+  maxSize = 1000           # Maximum number of entries (default: 1000)
+}
+
+# ==============================================================================
+# EXAMPLE CONFIGURATIONS
+# ==============================================================================
+
+# Example 1: Production with database and caching
+# ------------------------------------------------
+# storageType = DATABASE
+# database {
+#   host = your-db-server.com
+#   port = 5432
+#   name = production_db
+#   user = app_user
+#   pass = secure_password
+#   maximumPoolSize = 20
+# }
+# caching {
+#   enabled = true
+#   ttl = 600              # 10 minutes
+#   maxSize = 5000
+# }
+
+# Example 2: Development with file storage and no caching
+# --------------------------------------------------------
+# storageType = FILE
+# file {
+#   path = "dev-data/permissions.yml"
+# }
+# caching {
+#   enabled = false
+# }
+
+# Example 3: Testing with file storage and aggressive caching
+# ------------------------------------------------------------
+# storageType = FILE
+# file {
+#   path = "test-data/permissions.yml"
+# }
+# caching {
+#   enabled = true
+#   ttl = 60               # 1 minute
+#   maxSize = 100
+# }

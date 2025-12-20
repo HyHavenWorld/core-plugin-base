@@ -8,20 +8,24 @@
     <artifactId>core-base</artifactId>
     <version>1.0.0</version>
     <dependencies>
+        <!-- Database dependencies (optional - only needed if using DATABASE storage) -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.3</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
             <version>10.8.1</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -60,7 +64,7 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
             <version>10.8.1</version>
-            <scope>test</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
     <build>

@@ -25,7 +25,7 @@ class CorePluginManagerTest {
         }
 
         // Clean up test config file
-        File configFile = new File("application.yml");
+        File configFile = new File("application.conf");
         if (configFile.exists()) {
             configFile.delete();
         }
@@ -187,7 +187,7 @@ class CorePluginManagerTest {
             }
             """, storageType);
 
-        try (FileWriter writer = new FileWriter("application.yml")) {
+        try (FileWriter writer = new FileWriter("application.conf")) {
             writer.write(config);
         }
     }
@@ -216,7 +216,7 @@ class CorePluginManagerTest {
             }
             """, storageType, cachingEnabled);
 
-        try (FileWriter writer = new FileWriter("application.yml")) {
+        try (FileWriter writer = new FileWriter("application.conf")) {
             writer.write(config);
         }
     }

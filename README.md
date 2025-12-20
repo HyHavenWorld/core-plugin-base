@@ -27,11 +27,12 @@ A foundational library for Hytale plugins providing common infrastructure for us
 
 ## Quick Start
 
-### 1. Add Dependency
+### 1. Add Dependencies
 
 Add to your `pom.xml`:
 
 ```xml
+<!-- Core library (always required) -->
 <dependency>
     <groupId>com.hyhavenworld</groupId>
     <artifactId>core-plugin-base</artifactId>
@@ -39,30 +40,120 @@ Add to your `pom.xml`:
 </dependency>
 ```
 
+**If using DATABASE storage**, also add these dependencies:
+
+```xml
+<!-- PostgreSQL driver -->
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.3</version>
+</dependency>
+
+<!-- HikariCP connection pooling -->
+<dependency>
+    <groupId>com.zaxxer</groupId>
+    <artifactId>HikariCP</artifactId>
+    <version>5.1.0</version>
+</dependency>
+
+<!-- Flyway migrations -->
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+    <version>10.8.1</version>
+</dependency>
+
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-database-postgresql</artifactId>
+    <version>10.8.1</version>
+</dependency>
+```
+
+**And configure maven-shade-plugin** (required for Flyway to work):
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.5.0</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <!-- IMPORTANT: Preserve service files for Flyway -->
+                        <transformers>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                        </transformers>
+                        <filters>
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+> **⚠️ Critical:** The `ServicesResourceTransformer` is required for Flyway to detect the PostgreSQL database handler. Without it, you'll get "No database found to handle jdbc:postgresql" errors.
+
+**If using FILE storage**, no additional dependencies or build configuration needed.
+
 ### 2. Configure Storage
 
-Create `application.yml` in your plugin's working directory:
+Create `application.conf` in your plugin's working directory using HOCON format.
+
+> **⚠️ Important:** This library uses **HOCON** (Human-Optimized Config Object Notation), not YAML.
+> HOCON uses braces `{}` for nested objects and `=` for assignments. Do not use YAML-style indentation without braces, as it will cause parsing errors.
 
 **For Database Storage:**
-```yaml
-storageType: DATABASE
+```hocon
+storageType = DATABASE
 
-database:
-  host: localhost
-  port: 5432
-  name: hyhavenworld
-  user: postgres
-  pass: your_password
-  maximumPoolSize: 10
+database {
+  host = localhost
+  port = 5432
+  name = hyhavenworld
+  user = postgres
+  pass = your_password
+  maximumPoolSize = 10
+}
+
+# Optional: caching configuration
+caching {
+  enabled = false
+}
 ```
 
 **For File Storage:**
-```yaml
-storageType: FILE
+```hocon
+storageType = FILE
 
-file:
-  path: data/permissions.yml
+file {
+  path = "data/permissions.yml"
+}
+
+# Optional: caching configuration
+caching {
+  enabled = false
+}
 ```
+
+> **Note:** You only need to include the configuration section (`database` or `file`) that matches your `storageType`.
 
 ### 3. Initialize in Your Plugin
 
@@ -216,11 +307,12 @@ The permission system is inspired by LuckPerms:
 
 The library includes an optional **in-memory cache** powered by Caffeine for improved performance:
 
-```yaml
-caching:
-  enabled: true           # Enable/disable caching (default: false)
-  ttl: 300                # Time to live in seconds (default: 300 = 5 minutes)
-  maxSize: 1000           # Maximum number of entries (default: 1000)
+```hocon
+caching {
+  enabled = true           # Enable/disable caching (default: false)
+  ttl = 300                # Time to live in seconds (default: 300 = 5 minutes)
+  maxSize = 1000           # Maximum number of entries (default: 1000)
+}
 ```
 
 **Benefits:**
@@ -242,34 +334,38 @@ caching:
 
 **Example configurations:**
 
-```yaml
+```hocon
 # Development: No caching
-caching:
-  enabled: false
+caching {
+  enabled = false
+}
 
 # Production: Aggressive caching
-caching:
-  enabled: true
-  ttl: 600                # 10 minutes
-  maxSize: 5000
+caching {
+  enabled = true
+  ttl = 600                # 10 minutes
+  maxSize = 5000
+}
 
 # Testing: Short-lived cache
-caching:
-  enabled: true
-  ttl: 60                 # 1 minute
-  maxSize: 100
+caching {
+  enabled = true
+  ttl = 60                 # 1 minute
+  maxSize = 100
+}
 ```
 
 ### Database Pool Settings
 
-```yaml
-database:
-  host: localhost
-  port: 5432
-  name: hyhavenworld
-  user: postgres
-  pass: your_password
-  maximumPoolSize: 10      # Max connections in pool
+```hocon
+database {
+  host = localhost
+  port = 5432
+  name = hyhavenworld
+  user = postgres
+  pass = your_password
+  maximumPoolSize = 10      # Max connections in pool
+}
 ```
 
 HikariCP pool is configured with:
