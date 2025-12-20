@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS user_permissions (
     perm_value BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY(user_uuid, permission_node),
     FOREIGN KEY(user_uuid) REFERENCES users(uuid) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_user_permissions_node ON user_permissions(permission_node);

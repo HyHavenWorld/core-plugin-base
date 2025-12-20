@@ -7,14 +7,14 @@ A foundational library for Hytale plugins providing common infrastructure for us
 - **User Management**: Create, update, and manage user profiles with UUID-based identification
 - **Role System**: Hierarchical role system with inheritance support
 - **Permission System**: Flexible permission nodes (similar to LuckPerms) with boolean values
-- **Dual Storage**: Choose between PostgreSQL database or YAML file storage
+- **Dual Storage**: Choose between MySQL database or YAML file storage
 - **Thread-Safe**: Built with concurrent access in mind
 - **Easy Integration**: Simple facade API for quick plugin setup
 
 ## Storage Options
 
 ### Database Storage (Recommended for Production)
-- **PostgreSQL** with HikariCP connection pooling
+- **MySQL** with HikariCP connection pooling
 - Automatic schema migrations via Flyway
 - Thread-safe with proper transaction handling
 - Suitable for high-traffic servers
@@ -43,11 +43,11 @@ Add to your `pom.xml`:
 **If using DATABASE storage**, also add these dependencies:
 
 ```xml
-<!-- PostgreSQL driver -->
+<!-- MySQL driver -->
 <dependency>
-    <groupId>org.postgresql</groupId>
-    <artifactId>postgresql</artifactId>
-    <version>42.7.3</version>
+    <groupId>com.mysql</groupId>
+    <artifactId>mysql-connector-j</artifactId>
+    <version>9.1.0</version>
 </dependency>
 
 <!-- HikariCP connection pooling -->
@@ -66,7 +66,7 @@ Add to your `pom.xml`:
 
 <dependency>
     <groupId>org.flywaydb</groupId>
-    <artifactId>flyway-database-postgresql</artifactId>
+    <artifactId>flyway-mysql</artifactId>
     <version>10.8.1</version>
 </dependency>
 ```
@@ -109,7 +109,7 @@ Add to your `pom.xml`:
 </build>
 ```
 
-> **⚠️ Critical:** The `ServicesResourceTransformer` is required for Flyway to detect the PostgreSQL database handler. Without it, you'll get "No database found to handle jdbc:postgresql" errors.
+> **⚠️ Critical:** The `ServicesResourceTransformer` is required for Flyway to detect the MySQL database handler. Without it, you'll get "No database found to handle jdbc:mysql" errors.
 
 **If using FILE storage**, no additional dependencies or build configuration needed.
 
@@ -126,9 +126,9 @@ storageType = DATABASE
 
 database {
   host = localhost
-  port = 5432
+  port = 3306
   name = hyhavenworld
-  user = postgres
+  user = root
   pass = your_password
   maximumPoolSize = 10
 }
@@ -360,9 +360,9 @@ caching {
 ```hocon
 database {
   host = localhost
-  port = 5432
+  port = 3306
   name = hyhavenworld
-  user = postgres
+  user = root
   pass = your_password
   maximumPoolSize = 10      # Max connections in pool
 }
@@ -401,14 +401,14 @@ mvn test -Dtest=*File*
 ```
 
 Tests use:
-- H2 in-memory database (PostgreSQL compatibility mode) for JDBC tests
+- H2 in-memory database (MySQL compatibility mode) for JDBC tests
 - Temporary files for File repository tests
 
 
 ## Requirements
 
 - **Java**: 17 or higher
-- **Database** (if using DATABASE storage): PostgreSQL 12 or higher
+- **Database** (if using DATABASE storage): MySQL 5.7 or higher (MySQL 8.0+ recommended)
 - **Dependencies**: HikariCP, Flyway, SnakeYAML, Typesafe Config
 
 ## Building
