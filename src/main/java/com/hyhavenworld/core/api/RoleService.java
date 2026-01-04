@@ -28,4 +28,19 @@ public interface RoleService {
      */
     void addInheritance(String parent, String child);
 
+    /**
+     * Method that adds a permission to a role
+     * @param roleKey the role identifier (name)
+     * @param permissionNode the permission node to add
+     * @param value the permission value (true = granted, false = denied)
+     */
+    void addPermission(String roleKey, String permissionNode, boolean value);
+
+    /**
+     * Method that removes a permission from a role
+     * @param roleKey the role identifier (name)
+     * @param permissionNode the permission node to remove
+     */
+    void removePermission(String roleKey, String permissionNode);
+
 }

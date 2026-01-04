@@ -13,14 +13,18 @@ public class DatabaseConfig {
     private final String driverClassName;
 
     public DatabaseConfig(Config config) {
-        this.type = config.hasPath("database.type") ? config.getString("database.type") : "postgresql";
+        this.type = config.hasPath("database.type") ? config.getString("database.type") : "mysql";
         this.host = config.hasPath("database.host") ? config.getString("database.host") : "localhost";
-        this.port = config.hasPath("database.port") ? config.getInt("database.port") : 5432;
+        this.port = config.hasPath("database.port") ? config.getInt("database.port") : 3306;
         this.user = config.hasPath("database.user") ? config.getString("database.user") : "user";
         this.password = config.hasPath("database.pass") ? config.getString("database.pass") : "password";
         this.databaseName = config.hasPath("database.name") ? config.getString("database.name") : "databaseName";
         this.maximumPoolSize = config.hasPath("database.maximumPoolSize") ? config.getInt("database.maximumPoolSize") : 10;
-        this.driverClassName = config.hasPath("database.driverClassName") ? config.getString("database.driverClassName") : "org.postgresql.Driver";
+        this.driverClassName = config.hasPath("database.driverClassName") ? config.getString("database.driverClassName") : "com.mysql.cj.jdbc.Driver";
+    }
+
+    public String getType() {
+        return type;
     }
 
     public String getJdbcUrl() {

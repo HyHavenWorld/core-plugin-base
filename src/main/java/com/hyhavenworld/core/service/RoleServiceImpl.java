@@ -68,8 +68,19 @@ public class RoleServiceImpl implements RoleService {
     /**
      * Add permission to role and invalidate cache.
      */
+    @Override
     public void addPermission(String roleName, String permissionNode, boolean value) {
         roleRepository.addPermission(roleName, permissionNode, value);
+        // Invalidate role cache since permissions changed
+        cacheManager.invalidateRole(roleName);
+    }
+
+    /**
+     * Remove permission from role and invalidate cache.
+     */
+    @Override
+    public void removePermission(String roleName, String permissionNode) {
+        roleRepository.removePermission(roleName, permissionNode);
         // Invalidate role cache since permissions changed
         cacheManager.invalidateRole(roleName);
     }

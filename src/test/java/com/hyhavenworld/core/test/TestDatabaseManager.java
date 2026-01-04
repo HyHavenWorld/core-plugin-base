@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 /**
  * Manages an in-memory H2 database for testing purposes.
- * Sets up H2 in PostgreSQL compatibility mode and runs Flyway migrations.
+ * Sets up H2 in MySQL compatibility mode and runs Flyway migrations.
  */
 public class TestDatabaseManager {
 
@@ -28,9 +28,9 @@ public class TestDatabaseManager {
     }
 
     private void initializeDatabase() {
-        // Configure H2 in PostgreSQL mode
+        // Configure H2 in MySQL mode
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH");
+        config.setJdbcUrl("jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE");
         config.setUsername("sa");
         config.setPassword("");
         config.setMaximumPoolSize(5);

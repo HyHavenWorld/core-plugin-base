@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS role_permissions (
     perm_value BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY(role_id, permission_node),
     FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_role_permissions_node ON role_permissions(permission_node);
