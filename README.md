@@ -7,23 +7,33 @@ A foundational library for Hytale plugins providing common infrastructure for us
 - **User Management**: Create, update, and manage user profiles with UUID-based identification
 - **Role System**: Hierarchical role system with inheritance support
 - **Permission System**: Flexible permission nodes (similar to LuckPerms) with boolean values
-- **Dual Storage**: Choose between MySQL database or YAML file storage
+- **Multiple Database Engines**: Support for MySQL, MariaDB, PostgreSQL, and H2
+- **Dual Storage**: Choose between database (with 4 engine options) or YAML file storage
 - **Thread-Safe**: Built with concurrent access in mind
 - **Easy Integration**: Simple facade API for quick plugin setup
 
 ## Storage Options
 
 ### Database Storage (Recommended for Production)
-- **MySQL** with HikariCP connection pooling
-- Automatic schema migrations via Flyway
+
+Choose from **4 database engines** with engine-specific optimizations:
+
+- **MySQL** - Production-ready with InnoDB engine and utf8mb4 charset
+- **MariaDB** - MySQL-compatible with enhanced features
+- **PostgreSQL** - Standards-compliant with advanced features
+- **H2** - Embedded/in-memory database ideal for development and testing
+
+All database engines include:
+- HikariCP connection pooling for optimal performance
+- Automatic schema migrations via Flyway (engine-specific)
 - Thread-safe with proper transaction handling
 - Suitable for high-traffic servers
 
-### File Storage (Recommended for Development)
+### File Storage (Recommended for Simple Deployments)
 - **YAML** file-based persistence
 - Thread-safe with read/write locks
 - Automatic file reloading for consistency
-- Suitable for small deployments or testing
+- Suitable for small deployments or single-server setups
 
 ## Quick Start
 
@@ -40,8 +50,27 @@ Add to your `pom.xml`:
 </dependency>
 ```
 
-**If using DATABASE storage**, also add these dependencies:
+**If using DATABASE storage**, also add these **common dependencies**:
 
+```xml
+<!-- HikariCP connection pooling (required for all database engines) -->
+<dependency>
+    <groupId>com.zaxxer</groupId>
+    <artifactId>HikariCP</artifactId>
+    <version>5.1.0</version>
+</dependency>
+
+<!-- Flyway migrations (required for all database engines) -->
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+    <version>10.8.1</version>
+</dependency>
+```
+
+**Then add the specific driver for your chosen database engine:**
+
+#### MySQL
 ```xml
 <!-- MySQL driver -->
 <dependency>
@@ -50,25 +79,58 @@ Add to your `pom.xml`:
     <version>9.1.0</version>
 </dependency>
 
-<!-- HikariCP connection pooling -->
-<dependency>
-    <groupId>com.zaxxer</groupId>
-    <artifactId>HikariCP</artifactId>
-    <version>5.1.0</version>
-</dependency>
-
-<!-- Flyway migrations -->
-<dependency>
-    <groupId>org.flywaydb</groupId>
-    <artifactId>flyway-core</artifactId>
-    <version>10.8.1</version>
-</dependency>
-
+<!-- Flyway MySQL support -->
 <dependency>
     <groupId>org.flywaydb</groupId>
     <artifactId>flyway-mysql</artifactId>
     <version>10.8.1</version>
 </dependency>
+```
+
+#### MariaDB
+```xml
+<!-- MariaDB driver -->
+<dependency>
+    <groupId>org.mariadb.jdbc</groupId>
+    <artifactId>mariadb-java-client</artifactId>
+    <version>3.3.2</version>
+</dependency>
+
+<!-- Flyway MySQL support (MariaDB uses MySQL dialect) -->
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-mysql</artifactId>
+    <version>10.8.1</version>
+</dependency>
+```
+
+#### PostgreSQL
+```xml
+<!-- PostgreSQL driver -->
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.1</version>
+</dependency>
+
+<!-- Flyway PostgreSQL support -->
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-database-postgresql</artifactId>
+    <version>10.8.1</version>
+</dependency>
+```
+
+#### H2 (Development/Testing)
+```xml
+<!-- H2 driver -->
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <version>2.2.224</version>
+</dependency>
+
+<!-- Note: H2 support is built into flyway-core, no additional Flyway dependency needed -->
 ```
 
 **And configure maven-shade-plugin** (required for Flyway to work):
@@ -109,7 +171,7 @@ Add to your `pom.xml`:
 </build>
 ```
 
-> **⚠️ Critical:** The `ServicesResourceTransformer` is required for Flyway to detect the MySQL database handler. Without it, you'll get "No database found to handle jdbc:mysql" errors.
+> **⚠️ Critical:** The `ServicesResourceTransformer` is required for Flyway to detect database handlers. Without it, you'll get "No database found to handle jdbc:{type}" errors.
 
 **If using FILE storage**, no additional dependencies or build configuration needed.
 
@@ -121,21 +183,91 @@ Create `application.conf` in your plugin's working directory using HOCON format.
 > HOCON uses braces `{}` for nested objects and `=` for assignments. Do not use YAML-style indentation without braces, as it will cause parsing errors.
 
 **For Database Storage:**
+
+Choose your database engine and configure accordingly:
+
+#### MySQL
 ```hocon
 storageType = DATABASE
 
 database {
+  type = mysql
   host = localhost
   port = 3306
   name = hyhavenworld
   user = root
   pass = your_password
+  driverClassName = "com.mysql.cj.jdbc.Driver"
   maximumPoolSize = 10
 }
 
 # Optional: caching configuration
 caching {
   enabled = false
+}
+```
+
+#### MariaDB
+```hocon
+storageType = DATABASE
+
+database {
+  type = mariadb
+  host = localhost
+  port = 3306
+  name = hyhavenworld
+  user = root
+  pass = your_password
+  driverClassName = "org.mariadb.jdbc.Driver"
+  maximumPoolSize = 10
+}
+```
+
+#### PostgreSQL
+```hocon
+storageType = DATABASE
+
+database {
+  type = postgresql
+  host = localhost
+  port = 5432
+  name = hyhavenworld
+  user = postgres
+  pass = your_password
+  driverClassName = "org.postgresql.Driver"
+  maximumPoolSize = 10
+}
+```
+
+#### H2 (Embedded File Mode)
+```hocon
+storageType = DATABASE
+
+database {
+  type = h2
+  host = localhost
+  port = 9092
+  name = "./data/hyhavenworld"
+  user = sa
+  pass = ""
+  driverClassName = "org.h2.Driver"
+  maximumPoolSize = 10
+}
+```
+
+#### H2 (In-Memory Mode - for testing)
+```hocon
+storageType = DATABASE
+
+database {
+  type = h2
+  host = localhost
+  port = 9092
+  name = "mem:hyhavenworld"
+  user = sa
+  pass = ""
+  driverClassName = "org.h2.Driver"
+  maximumPoolSize = 10
 }
 ```
 
@@ -407,9 +539,13 @@ Tests use:
 
 ## Requirements
 
-- **Java**: 17 or higher
-- **Database** (if using DATABASE storage): MySQL 5.7 or higher (MySQL 8.0+ recommended)
-- **Dependencies**: HikariCP, Flyway, SnakeYAML, Typesafe Config
+- **Java**: 17 or higher (Java 25 recommended)
+- **Database** (if using DATABASE storage):
+  - **MySQL**: 5.7 or higher (MySQL 8.0+ recommended)
+  - **MariaDB**: 10.3 or higher (MariaDB 10.6+ recommended)
+  - **PostgreSQL**: 12 or higher (PostgreSQL 15+ recommended)
+  - **H2**: 2.0 or higher (embedded, no installation required)
+- **Dependencies**: HikariCP, Flyway, SnakeYAML, Typesafe Config, appropriate JDBC driver for your chosen database
 
 ## Building
 

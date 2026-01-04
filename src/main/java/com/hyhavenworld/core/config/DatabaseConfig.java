@@ -23,6 +23,10 @@ public class DatabaseConfig {
         this.driverClassName = config.hasPath("database.driverClassName") ? config.getString("database.driverClassName") : "com.mysql.cj.jdbc.Driver";
     }
 
+    public String getType() {
+        return type;
+    }
+
     public String getJdbcUrl() {
         return "jdbc:" + type + "://" + host + ":" + port + "/" + databaseName;
     }

@@ -1,0 +1,102 @@
+# Example configuration for core-plugin-base
+# Copy this file to application.yml and configure according to your needs
+
+# Storage type: DATABASE or FILE
+storageType: DATABASE
+
+# ===== DATABASE STORAGE CONFIGURATION =====
+# Choose one of the following database configurations based on your database engine
+
+# --- MySQL Configuration (default) ---
+database:
+  type: mysql
+  host: localhost
+  port: 3306
+  name: hyhavenworld
+  user: root
+  pass: password
+  driverClassName: com.mysql.cj.jdbc.Driver
+  maximumPoolSize: 10
+
+# --- MariaDB Configuration ---
+# Uncomment and modify the lines below to use MariaDB
+# database:
+#   type: mariadb
+#   host: localhost
+#   port: 3306
+#   name: hyhavenworld
+#   user: root
+#   pass: password
+#   driverClassName: org.mariadb.jdbc.Driver
+#   maximumPoolSize: 10
+
+# --- PostgreSQL Configuration ---
+# Uncomment and modify the lines below to use PostgreSQL
+# database:
+#   type: postgresql
+#   host: localhost
+#   port: 5432
+#   name: hyhavenworld
+#   user: postgres
+#   pass: password
+#   driverClassName: org.postgresql.Driver
+#   maximumPoolSize: 10
+
+# --- H2 Configuration (Embedded/In-Memory for Development/Testing) ---
+# Uncomment and modify the lines below to use H2
+# For embedded file mode (data persisted to disk):
+# database:
+#   type: h2
+#   host: localhost
+#   port: 9092
+#   name: ./data/hyhavenworld
+#   user: sa
+#   pass:
+#   driverClassName: org.h2.Driver
+#   maximumPoolSize: 10
+#
+# For in-memory mode (data lost on restart, useful for testing):
+# database:
+#   type: h2
+#   host: localhost
+#   port: 9092
+#   name: mem:hyhavenworld
+#   user: sa
+#   pass:
+#   driverClassName: org.h2.Driver
+#   maximumPoolSize: 10
+
+# ===== FILE STORAGE CONFIGURATION =====
+# Uncomment the lines below to use file-based storage instead of database
+# storageType: FILE
+# file:
+#   path: data/storage.yml
+
+# ===== CONFIGURATION NOTES =====
+#
+# Database Type:
+#   - The 'type' field must match one of: mysql, mariadb, postgresql, h2
+#   - This determines which migration scripts are used (db/migration/{type}/)
+#   - The JDBC URL is automatically constructed as: jdbc:{type}://{host}:{port}/{name}
+#
+# Driver Class Names:
+#   - MySQL: com.mysql.cj.jdbc.Driver
+#   - MariaDB: org.mariadb.jdbc.Driver
+#   - PostgreSQL: org.postgresql.Driver
+#   - H2: org.h2.Driver
+#
+# Connection Pool:
+#   - maximumPoolSize: Maximum number of connections in the HikariCP pool (default: 10)
+#   - Adjust based on your expected load and database server capacity
+#
+# Flyway Migrations:
+#   - Migrations are automatically applied on startup
+#   - Engine-specific migrations ensure optimal performance for each database
+#   - MySQL/MariaDB: Uses InnoDB engine with utf8mb4 charset
+#   - PostgreSQL: Uses standard SQL with SERIAL sequences
+#   - H2: Uses AUTO_INCREMENT with clean SQL (ideal for testing)
+#
+# H2 Database Modes:
+#   - Embedded file: name: ./data/hyhavenworld (persisted to disk)
+#   - In-memory: name: mem:hyhavenworld (data lost on restart)
+#   - Server mode: Connect to remote H2 server using host/port

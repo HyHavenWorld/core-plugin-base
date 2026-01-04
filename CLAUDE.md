@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`core-plugin-base` is a foundational library for Hytale plugins, providing common infrastructure for user management, roles, and permissions. The library is designed to work independently of the Hytale API and supports two storage backends: database (PostgreSQL via JDBC) or file-based (YAML).
+`core-plugin-base` is a foundational library for Hytale plugins, providing common infrastructure for user management, roles, and permissions. The library is designed to work independently of the Hytale API and supports two storage backends: database (MySQL, MariaDB, PostgreSQL, or H2 via JDBC) or file-based (YAML).
 
 **Key Technologies:**
 - Java 25
 - Maven build system
-- PostgreSQL database (with HikariCP connection pooling)
-- Flyway for database migrations
+- Multiple database engines supported: MySQL, MariaDB, PostgreSQL, H2 (with HikariCP connection pooling)
+- Flyway for database migrations (with engine-specific migration scripts)
 - Typesafe Config for configuration management
 - SnakeYAML for file-based storage
 
@@ -51,10 +51,73 @@ The library uses a single-step initialization via the **CorePluginManager** faca
 Configuration is loaded from `application.yml` in the working directory via `CoreConfig`:
 
 - **storageType**: `DATABASE` or `FILE` - determines which repository implementation to use
-- **database**: Connection settings (host, port, name, user, pass)
+- **database**: Connection settings (type, host, port, name, user, pass, driverClassName)
 - **file.path**: Path to YAML file for file-based storage
 
-The `DatabaseConfig` class constructs JDBC URLs and defaults to PostgreSQL on port 5254.
+The `DatabaseConfig` class constructs JDBC URLs dynamically based on the database type.
+
+#### Supported Database Engines
+
+The library supports four database engines with engine-specific optimizations:
+
+**MySQL** (default):
+```yaml
+database:
+  type: mysql
+  host: localhost
+  port: 3306
+  name: hyhavenworld
+  user: root
+  pass: password
+  driverClassName: com.mysql.cj.jdbc.Driver
+  maximumPoolSize: 10
+```
+
+**MariaDB**:
+```yaml
+database:
+  type: mariadb
+  host: localhost
+  port: 3306
+  name: hyhavenworld
+  user: root
+  pass: password
+  driverClassName: org.mariadb.jdbc.Driver
+  maximumPoolSize: 10
+```
+
+**PostgreSQL**:
+```yaml
+database:
+  type: postgresql
+  host: localhost
+  port: 5432
+  name: hyhavenworld
+  user: postgres
+  pass: password
+  driverClassName: org.postgresql.Driver
+  maximumPoolSize: 10
+```
+
+**H2** (embedded/in-memory, ideal for development and testing):
+```yaml
+database:
+  type: h2
+  host: localhost
+  port: 9092
+  name: ./data/hyhavenworld  # File path for embedded mode, or mem:hyhavenworld for in-memory
+  user: sa
+  pass:
+  driverClassName: org.h2.Driver
+  maximumPoolSize: 10
+```
+
+**Note**: The `type` field determines both the JDBC URL format and which migration scripts are used. Flyway automatically loads engine-specific migrations from `db/migration/{type}/`.
+
+**H2 Usage Modes:**
+- **Embedded file**: `name: ./data/hyhavenworld` - Data persisted to disk
+- **In-memory**: `name: mem:hyhavenworld` - Data lost on restart (useful for testing)
+- **Server mode**: Use host/port for remote H2 server connection
 
 ### Service Layer Architecture
 
@@ -111,7 +174,18 @@ Relationships are managed through junction tables (user_roles, role_inheritance,
 
 ### Database Migrations
 
-Flyway manages schema via `src/main/resources/db/migration/`:
+Flyway manages schema via engine-specific migration directories in `src/main/resources/db/migration/{engine}/`:
+
+**Migration Structure:**
+```
+db/migration/
+├── mysql/       (MySQL-specific migrations with InnoDB engine, utf8mb4 charset)
+├── mariadb/     (MariaDB-specific migrations with InnoDB engine, utf8mb4 charset)
+├── postgresql/  (PostgreSQL-specific migrations with SERIAL, standard SQL)
+└── h2/          (H2-specific migrations with AUTO_INCREMENT, clean SQL)
+```
+
+**Migration Scripts (V1-V6):**
 - V1: users table
 - V2: roles table
 - V3: role_inheritance (role hierarchy)
@@ -119,7 +193,12 @@ Flyway manages schema via `src/main/resources/db/migration/`:
 - V5: role_permissions (permission nodes assigned to roles)
 - V6: user_permissions (permission nodes assigned directly to users)
 
-Migrations run automatically when `DatabaseManager.init()` is called.
+Migrations run automatically when `DatabaseManager.init()` is called. The correct migration directory is selected based on the `database.type` configuration.
+
+**Key Differences Between Engines:**
+- **MySQL/MariaDB**: Use `AUTO_INCREMENT`, `ENGINE=InnoDB`, and `CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+- **PostgreSQL**: Use `SERIAL` for auto-increment, no engine/charset specifications (uses database defaults)
+- **H2**: Use `AUTO_INCREMENT`, clean SQL without engine/charset specifications (compatible with both MySQL and PostgreSQL syntax)
 
 **Permission System:**
 - Permissions are stored as strings (permission nodes) like "hyhavenworld.admin", "hyhavenworld.fly"

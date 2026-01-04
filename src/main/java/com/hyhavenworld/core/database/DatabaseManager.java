@@ -43,19 +43,23 @@ public class DatabaseManager implements AutoCloseable {
         datasource = new HikariDataSource(hikari);
 
         // Run database migrations using the same datasource
-        runMigrations();
+        runMigrations(config);
     }
 
-    private void runMigrations() {
+    private void runMigrations(CoreConfig config) {
         // Use the HikariCP datasource instead of creating a new one
         // This ensures the driver is loaded in the correct classloader context
 
         // Set the correct classloader for finding migration files in plugin environments
         ClassLoader classLoader = this.getClass().getClassLoader();
 
+        // Select migration location based on database type
+        String dbType = config.getDatabaseConfig().getType();
+        String migrationLocation = "classpath:db/migration/" + dbType;
+
         Flyway flyway = Flyway.configure(classLoader)
             .dataSource(datasource)
-            .locations("classpath:db/migration")
+            .locations(migrationLocation)
             .load();
 
         flyway.migrate();
