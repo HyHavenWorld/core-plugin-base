@@ -38,10 +38,10 @@ public class TestDatabaseManager {
 
         dataSource = new HikariDataSource(config);
 
-        // Run Flyway migrations
+        // Run Flyway migrations - use H2-specific migrations only
         Flyway flyway = Flyway.configure()
             .dataSource(dataSource)
-            .locations("classpath:db/migration")
+            .locations("classpath:db/migration/h2")
             .cleanDisabled(false)
             .load();
 
@@ -55,7 +55,7 @@ public class TestDatabaseManager {
     public void cleanDatabase() {
         Flyway flyway = Flyway.configure()
             .dataSource(dataSource)
-            .locations("classpath:db/migration")
+            .locations("classpath:db/migration/h2")
             .cleanDisabled(false)
             .load();
 
